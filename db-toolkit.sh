@@ -14,11 +14,13 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m'
+C_DIM=$'\e[2m'
+C_RESET=$'\e[0m'
 
 # --- Globals ---
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 SPINNER_PID=""
-HR="------------------------------------------------------------"
+HR="────────────────────────────────────────────────────────────────────────"
 ACTION="" 
 DB_EXISTS=0
 
@@ -46,9 +48,9 @@ abort_script() {
 # --- UI Helpers ---
 print_banner() {
   clear
-  echo -e "${CYAN}${BOLD}  ========================================================${NC}"
-  echo -e "${CYAN}${BOLD}    ❖  DATABASE TOOLKIT (RESTORE & EXPORT)${NC}"
-  echo -e "${CYAN}${BOLD}  ========================================================${NC}"
+  echo -e "${CYAN}${BOLD} ╔══════════════════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}${BOLD} ║                    DATABASE TOOLKIT (RESTORE & EXPORT)               ║${NC}"
+  echo -e "${CYAN}${BOLD} ╚══════════════════════════════════════════════════════════════════════╝${NC}"
   echo ""
 }
 
