@@ -22,7 +22,7 @@ HR="------------------------------------------------------------"
 ACTION="" 
 DB_EXISTS=0
 
-# --- Process Cleanup ---
+# --- Process Cleanup & Abort Handling ---
 kill_spinner() {
   if [[ -n "$SPINNER_PID" ]]; then
     kill "$SPINNER_PID" 2>/dev/null
@@ -31,10 +31,16 @@ kill_spinner() {
   fi
 }
 
-trap cleanup EXIT INT TERM
-cleanup() {
+# 1. Handle normal exits gracefully (restore cursor)
+trap 'tput cnorm; kill_spinner' EXIT
+
+# 2. Handle Ctrl+C (SIGINT) forcefully
+trap 'abort_script' INT TERM
+abort_script() {
   kill_spinner
-  tput cnorm # Ensure cursor is visible
+  tput cnorm
+  echo -e "\n\n${RED}  ✖ Process aborted by user.${NC}"
+  exit 1
 }
 
 # --- UI Helpers ---
@@ -79,11 +85,10 @@ prompt_input() {
 
 success() { echo -e "${GREEN}  ✔ ${NC} $1"; }
 
-# Safely kill spinner and print error
 error() { 
   if [[ -n "$SPINNER_PID" ]]; then
     kill_spinner
-    echo -e "\b\b\b${RED}✖${NC}\n" # Replace spinner with Red X
+    echo -e "\b\b\b${RED}✖${NC}\n" 
     echo -e "  ${RED}↳ Error:${NC} $1"
   else
     echo -e "\n  ${RED}✖ Error:${NC} $1"
