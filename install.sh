@@ -3,10 +3,10 @@
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
-REPO_SCRIPT="https://raw.githubusercontent.com/raj5222/DB-Restore-Export-Script/main/db-restore.sh"
-INSTALL_PATH="/usr/local/bin/db-restore"
-TMP_FILE="/tmp/db-restore-installer-$$"
-BACKUP_FILE="/tmp/db-restore-backup-$$"
+REPO_SCRIPT="https://raw.githubusercontent.com/raj5222/DB-Restore-Export-Script/main/db-toolkit.sh"
+INSTALL_PATH="/usr/local/bin/db-toolkit"
+TMP_FILE="/tmp/db-toolkit-installer-$$"
+BACKUP_FILE="/tmp/db-toolkit-backup-$$"
 
 # Total steps for the progress bar
 TOTAL_STEPS=6
@@ -189,5 +189,5 @@ run_task "Cleaning up temporary files" \
 draw_header "100"
 echo ""
 echo -e " ${GREEN}✔ Installation Complete${NC}"
-echo -e "   Run command: ${BOLD}db-restore${NC}"
+echo -e "   Run command: ${BOLD}db-toolkit${NC}"
 echo ""
