@@ -100,29 +100,72 @@ _draw_hdr() {
   tput rc
 }
 
+# ── Dynamic Log Processing ──
+_process_line() {
+  local l="$1"
+  # Strip ANSI escape codes and non-printable chars
+  l=$(printf '%s' "$l" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | tr -dc '[:print:]')
+  low="${l,,}"; pfx="${DIM}▶${NC}"
+  if [[ "$low" =~ (error:|fatal:|failed:|connection\ refused|e[0-9]{5}) ]]; then
+    (( LOG_ERR++ )); pfx="${LR}✖${NC}"; echo "$l" >> "$ERR_FILE"
+  elif [[ "$low" =~ (warning:|warn:|deprecated|ignored) ]]; then
+    (( LOG_WARN++ )); pfx="${LY}⚠${NC}"
+  elif [[ "$low" =~ (finished|successfully|done|complete|restored\ successfully) ]]; then
+    (( LOG_OK++ )); pfx="${LG}✔${NC}"
+  fi
+  (( LOG_LINES++ ))
+  if [[ "$WIN_HDR" != "0" ]]; then
+    cln="${l:0:$TEXT_W}"
+    printf "  %b│%b %b %s\033[K\033[%dG%b│▒│%b\n" "$C" "$NC" "$pfx" "$cln" $(( BOX_W-2 )) "$C" "$NC"
+    (( LOG_LINES % 4 == 0 )) && _draw_hdr
+  else
+    printf "  %b│%b %b %s\n" "$C" "$NC" "$pfx" "$l"
+  fi
+}
+
 _stream_logs() {
   tput civis; LOG_START=$(date +%s); _draw_hdr
-  local TEXT_W=$(( BOX_W - 9 )) l low pfx cln
-  while IFS= read -r l; do
-    # Strip ANSI escape codes and non-printable chars
-    l=$(printf '%s' "$l" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | tr -dc '[:print:]')
-    low="${l,,}"; pfx="${DIM}▶${NC}"
-    if [[ "$low" =~ (error:|fatal:|failed:|connection\ refused|e[0-9]{5}) ]]; then
-      (( LOG_ERR++ )); pfx="${LR}✖${NC}"; echo "$l" >> "$ERR_FILE"
-    elif [[ "$low" =~ (warning:|warn:|deprecated|ignored) ]]; then
-      (( LOG_WARN++ )); pfx="${LY}⚠${NC}"
-    elif [[ "$low" =~ (finished|successfully|done|complete|restored\ successfully) ]]; then
-      (( LOG_OK++ )); pfx="${LG}✔${NC}"
-    fi
-    (( LOG_LINES++ ))
-    if [[ "$WIN_HDR" != "0" ]]; then
-      cln="${l:0:$TEXT_W}"
-      printf "  %b│%b %b %s\033[K\033[%dG%b│▒│%b\n" "$C" "$NC" "$pfx" "$cln" $(( BOX_W-2 )) "$C" "$NC"
-      (( LOG_LINES % 4 == 0 )) && _draw_hdr
+  local TEXT_W=$(( BOX_W - 9 ))
+  local f='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' spin_idx=0
+  local spin_col=$(( BOX_W / 2 - 6 ))
+  local l low pfx cln ret
+
+  # Loop with a 0.1s timeout to keep the UI spinning independently of log speed
+  while :; do
+    if IFS= read -t 0.1 -r l; then
+      _process_line "$l"
     else
-      printf "  %b│%b %b %s\n" "$C" "$NC" "$pfx" "$l"
+      ret=$?
+      if [[ $ret -gt 128 ]]; then
+        # Timeout reached, logs are quiet — just let the spinner tick
+        :
+      else
+        # EOF reached (process finished)
+        [[ -n "$l" ]] && _process_line "$l"
+        break
+      fi
+    fi
+
+    # Render live spinner onto the bottom border
+    if [[ "$WIN_HDR" != "0" ]]; then
+      tput sc
+      tput cup $WIN_BOT $spin_col
+      printf "%b[ %b%s%b Processing ]%b" "$C" "$LC" "${f:$spin_idx:1}" "$C" "$NC"
+      tput rc
+      
+      spin_idx=$(( (spin_idx+1) % ${#f} ))
+      # Keep the header time ticking even if no logs arrive
+      (( spin_idx % 10 == 0 )) && _draw_hdr 
     fi
   done
+
+  # Lock in the final Finished state on the border
+  if [[ "$WIN_HDR" != "0" ]]; then
+    tput sc
+    tput cup $WIN_BOT $spin_col
+    printf "%b[ %b✔%b Finished   ]%b" "$C" "$LG" "$C" "$NC"
+    tput rc
+  fi
   _draw_hdr
 }
 
