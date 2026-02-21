@@ -191,7 +191,7 @@ _mongo_auth() {
 # ── Main Flow ──
 clear
 echo -e "\n  ${LC}${BOLD}╔══════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "  ${LC}${BOLD}║${NC}  ${W}${BOLD}DATABASE TOOLKIT${NC}  ·  MySQL · PostgreSQL · MongoDB                 ${LC}${BOLD}║${NC}"
+echo -e "  ${LC}${BOLD}║${NC}  ${W}${BOLD}DATABASE TOOLKIT${NC}  ·  MySQL · PostgreSQL · MongoDB                   ${LC}${BOLD}║${NC}"
 echo -e "  ${LC}${BOLD}╚══════════════════════════════════════════════════════════════════════╝${NC}"
 
 # ─────────────────────────────────────────────
